@@ -87,9 +87,9 @@ def run_epoch(mode, model, cur_epoch, dataLoaders, alpha, verbose = True):
         batch_loss = model.loss_fxn(y_pred, y_true)
 
         if alpha:                                       # conservation of mass
-            X_pop = ((10**X[...,k, k]).sum(1)).log10()   # sums across all levels (-1, 400)
+            X_pop = ((10**X[...,k, k]).sum(1)).log10()   # sums across all levels (-1, ndep)
             y_pop = ((10**y_pred[...,0, 0]).sum(1)).log10()
-            batch_loss = alpha * torch.nn.MSELoss()(y_pop, X_pop) + (1 - alpha) * batch_loss #add conservation of mass loss to batchLoss
+            batch_loss = alpha * torch.nn.MSELoss()(y_pop, X_pop) + (1 - alpha) * batch_loss  # conservation of mass loss 
             
         #------------ BACKWARD ------------#
         if mode == 'train':

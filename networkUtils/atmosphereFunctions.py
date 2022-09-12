@@ -10,10 +10,10 @@ from torch.utils.data import DataLoader
 def predict_populations(pop_path, train_data_path, config):
     '''
     Function to predict NLTE populations of prepared data file of
-    3x3x400 LTE test points.
+    3 x 3 x ndep LTE test points.
     
     train_data_path (str)      # path to training data for model, need it for data scaling
-    pop_path (str)             # path to file of 3x3x400 testing data points from 1_build_solving_set.py
+    pop_path (str)             # path to file of 3 x 3 x ndep testing data points from 1_build_solving_set.py
     
      config={       
         'cuda': (bool),                # whether to use CUDA for forward pass 
@@ -61,8 +61,6 @@ def predict_populations(pop_path, train_data_path, config):
     with h5py.File(pop_path, 'r') as f:
         lte = f['lte test windows'][:]
         z = f['z'][:]
-        cmass_mean = f['column mass'][:]
-        cmass_scale = f['column scale'][:]
         
     lte = (lte-mu_inp)/std_inp
     non_lte = numpy.zeros_like(lte)  # placeholder only
@@ -93,4 +91,4 @@ def predict_populations(pop_path, train_data_path, config):
     dimc = config['channels']
     pred_final = pred_final.reshape((dim, dim, dimz, dimc))
     
-    return pred_final, z, cmass_mean, cmass_scale
+    return pred_final, z

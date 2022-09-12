@@ -14,7 +14,7 @@ from networkUtils.dataSets import PopulationDataset3d
 from networkUtils.trainingFunctions import train
 
 
-def build_solving_set(lte_pops, rho_mean, z_scale, save_path="example.hdf5", ndep=400, pad=1):
+def build_solving_set(lte_pops, z_scale, save_path="example.hdf5", ndep=400, pad=1):
     """
     Prepares populations from 3D simulation into a file to be fed into a trained network
     to make population predictions.
@@ -24,9 +24,6 @@ def build_solving_set(lte_pops, rho_mean, z_scale, save_path="example.hdf5", nde
     lte_pops : 4D array
         Array with LTE populations. Shape should be (nx, ny, nz, nlevels),
         units in m^-3.
-    rho_mean : 1D array
-        Array with horizontally-averaged mass density. Shape should be (nz,),
-        units in kg m^-3.
     z_scale : 1D array
         Height scale in m. First point should be top of atmosphere.
     save_path : str
@@ -53,14 +50,6 @@ def build_solving_set(lte_pops, rho_mean, z_scale, save_path="example.hdf5", nde
     print('Padding for periodic boundary conditions...')
     lte = np.pad(lte_pops, pad_width=npad, mode='wrap')
     print(f'LTE shape after padding: {lte.shape}')
-    print('Starting Z interpolation...')
-    cmass_mean = cumtrapz(rho_mean, -z_scale, initial=0)
-    cmass_scale = np.logspace(-6, 2, ndep)  # New log column mass scale, -6 to 2
-    print('Interpolating functions...')
-    f_lte = interp1d(cmass_mean, lte, kind='linear', axis=2, fill_value='extrapolate')
-    f_z = interp1d(cmass_mean, z_scale, kind='linear', axis=-1, fill_value='extrapolate')
-    lte = f_lte(cmass_scale)
-    new_z = f_z(cmass_scale)
     print('Rearranging and taking Log10...')
     lte = np.transpose(np.log10(lte), (3,2,0,1))
     print('Splitting into windows and columns...')
@@ -74,12 +63,10 @@ def build_solving_set(lte_pops, rho_mean, z_scale, save_path="example.hdf5", nde
     print(f'Saving into {save_path}...')
     with h5py.File(save_path, 'w') as f:
         dset1 = f.create_dataset("lte test windows", data=lte, dtype='f')
-        dset2 = f.create_dataset("column mass", data=cmass_mean, dtype='f')
-        dset3 = f.create_dataset("column scale", data=cmass_scale, dtype='f')
-        dset4 = f.create_dataset("z", data=new_z, dtype='f')
+        dset4 = f.create_dataset("z", data=z_scale, dtype='f')
 
 
-def build_training_set(lte_pops, nlte_pops, rho_mean, z_scale,
+def build_training_set(lte_pops, nlte_pops, z_scale,
                        save_path="example.hdf5", ndep=400, pad=1, tr_percent=85):
     """
     Prepares populations from 3D simulation into a file to be fed into a network
@@ -95,11 +82,6 @@ def build_training_set(lte_pops, nlte_pops, rho_mean, z_scale,
     nlte_pops : list or array_like
         List of 4D arrays with LTE populations to use for training. Same shape
         and units as lte_pops.
-    rho_mean : list or array_like
-        List with 1D arrays of spatially averaged mass density. Each item
-        in list could be average density from a different snapshot and/or simulation.
-        List should have at least one element. The shape of each array should be
-        (nz,), units in kg m^-3.
     z_scale : list or array like.
         List with 1D arrays of height. Each item in list could be height from a 
         different snapshot and/or simulation. List should have at least one element.
@@ -130,22 +112,10 @@ def build_training_set(lte_pops, nlte_pops, rho_mean, z_scale,
     lte_list = []
     non_lte_list = []
 
-    for lte_in, nlte_in, rho_in, z in zip(lte_pops, nlte_pops, rho_mean, z_scale):
-        print(f'rho shape {rho_in.shape}')
-        print(f'z shape {z.shape}')
-        cmass_mean = cumtrapz(rho_in, -z, initial=0)
-        cmass_scale = np.logspace(-6, 2, ndep)
-        print('Interpolating functions...')
-        f_lte = interp1d(cmass_mean, lte_in, kind='linear', 
-                         axis=2, fill_value='extrapolate')
-        f_non_lte = interp1d(cmass_mean, nlte_in, kind='linear', 
-                             axis=2, fill_value='extrapolate')
-        print('Applying new scale...')
-        lte = f_lte(cmass_scale)
-        non_lte = f_non_lte(cmass_scale)
+    for lte_in, nlte_in, in zip(lte_pops, nlte_pops):
         print('Padding data...')
-        lte = np.pad(lte, pad_width=npad, mode='wrap')
-        non_lte = np.pad(non_lte, pad_width=npad, mode='wrap')
+        lte = np.pad(lte_in, pad_width=npad, mode='wrap')
+        non_lte = np.pad(nlte_in, pad_width=npad, mode='wrap')
         print('Log and transpose...')
         lte = np.transpose(np.log10(lte), (3,2,0,1))
         non_lte = np.transpose(np.log10(non_lte), (3,2,0,1))
@@ -424,12 +394,10 @@ def sunnynet_predict_populations(model_path, train_path, test_path, save_path,
         'alpha': alpha,   # weight in loss calc. between mass conservation and cell by cell error
         'output_XY': nx,  # number of pixels in horizontal dimensions
     }
-    final, z, cmass_mean, cmass_scale = predict_populations(test_path, train_path, pred_config)
+    final, z = predict_populations(test_path, train_path, pred_config)
     print('Exponentiate')
     final = 10**final
     print(f'Atmos shape: {final.shape}')
     with h5py.File(save_path, 'w') as f:
         dset = f.create_dataset("populations", data = final, dtype='f')
         dset.attrs['z'] = z
-        dset.attrs['cmass_mean'] = cmass_mean
-        dset.attrs['cmass_scale'] = cmass_scale

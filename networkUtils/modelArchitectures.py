@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class SunnyNet_1x1(nn.Module):
     '''
-    this is built to work with [6,400,1,1] input data and to output [6,400,1,1] outputs
+    this is built to work with [6,ndep,1,1] input data and to output [6,ndep,1,1] outputs
     '''
     def __init__(self, channels, depth, height, width):
         super().__init__()
@@ -44,9 +44,8 @@ class SunnyNet_1x1(nn.Module):
         self.max3 = nn.MaxPool1d(kernel_size=2, stride = 2)
 
         self.fc1 = nn.Linear(6144, 4700)
-        self.fc2 = nn.Linear(4700, channels*depth)
+        self.fc2 = nn.Linear(4700, channels * depth)
 
-        #self.dropout = nn.Dropout2d(p=0.5)
         self.dropout = nn.Dropout(p=0.5)
     
     def forward(self, x):
@@ -79,7 +78,7 @@ class SunnyNet_1x1(nn.Module):
 
 class SunnyNet_3x3(nn.Module):
     '''
-    this is built to work with [6,400,3,3] input data and to output [6,400,1,1] outputs
+    this is built to work with [6,ndep,3,3] input data and to output [6,ndep,,1,1] outputs
     '''
     def __init__(self, channels, depth, height, width):
         super().__init__()
@@ -118,9 +117,8 @@ class SunnyNet_3x3(nn.Module):
         self.max3 = nn.MaxPool1d(kernel_size=2, stride = 2)
 
         self.fc1 = nn.Linear(6144, 4700)
-        self.fc2 = nn.Linear(4700, channels*depth)
+        self.fc2 = nn.Linear(4700, channels * depth)
 
-        #self.dropout = nn.Dropout2d(p=0.5)
         self.dropout = nn.Dropout(p=0.5)
     
     def forward(self, x):
@@ -151,7 +149,7 @@ class SunnyNet_3x3(nn.Module):
 
 class SunnyNet_5x5(nn.Module):
     '''
-    this is built to work with [6,400,5,5] input data and to output [6,400,1,1] outputs
+    this is built to work with [6,ndep,5,5] input data and to output [6,ndep,1,1] outputs
     '''
     def __init__(self, channels, depth, height, width):
         super().__init__()
@@ -190,9 +188,8 @@ class SunnyNet_5x5(nn.Module):
         self.max3 = nn.MaxPool1d(kernel_size=2, stride = 2)
 
         self.fc1 = nn.Linear(6144, 4700)
-        self.fc2 = nn.Linear(4700, channels*depth)
+        self.fc2 = nn.Linear(4700, channels * depth)
 
-        #self.dropout = nn.Dropout2d(p=0.5)
         self.dropout = nn.Dropout(p=0.5)
     
     def forward(self, x):
@@ -224,7 +221,7 @@ class SunnyNet_5x5(nn.Module):
 
 class SunnyNet_7x7(nn.Module):
     '''
-    this is built to work with [6,400,7,7] input data and to output [6,400,1,1] outputs
+    this is built to work with [6,ndep,7,7] input data and to output [6,ndep,1,1] outputs
     '''
     def __init__(self, channels, depth, height, width):
         super().__init__()
@@ -263,9 +260,8 @@ class SunnyNet_7x7(nn.Module):
         self.max3 = nn.MaxPool1d(kernel_size=2, stride = 2)
 
         self.fc1 = nn.Linear(6144, 4700)
-        self.fc2 = nn.Linear(4700, channels*depth)
+        self.fc2 = nn.Linear(4700, channels * depth)
 
-        #self.dropout = nn.Dropout2d(p=0.5)
         self.dropout = nn.Dropout(p=0.5)
     
     def forward(self, x):
