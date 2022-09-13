@@ -159,7 +159,7 @@ def build_training_set(lte_pops, nlte_pops, z_scale,
         dset1.attrs["mu"] = mu_inp
         dset1.attrs["std"] = std_inp
         dset1.attrs["len"] = train_len
-        dset1.attrs["z"] = z
+        dset1.attrs["z"] = z_scale
         dset2 = f.create_dataset("non lte training points", data=non_lte_train, dtype='f')
         dset2.attrs["mu"] = mu_out
         dset2.attrs["std"] = std_out
@@ -167,7 +167,7 @@ def build_training_set(lte_pops, nlte_pops, z_scale,
         dset3.attrs["mu"] = mu_inp
         dset3.attrs["std"] = std_inp
         dset3.attrs["len"] = test_len
-        dset3.attrs["z"] = z
+        dset3.attrs["z"] = z_scale
         dset4 = f.create_dataset("non lte test points", data=non_lte_test, dtype='f')
         dset4.attrs["mu"] = mu_out
         dset4.attrs["std"] = std_out
